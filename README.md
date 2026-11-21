@@ -21,7 +21,21 @@ Mistri's spoken lines come from the knowledge base, filled in with what you said
 ("set for small photo paper, but there's normal A4 in it"). Claude interprets the
 caller. It never writes Mistri's lines. That's the "guided" part.
 
-## Set up (once, about 10 minutes)
+## Run it with nothing installed
+
+Open **https://hsurick.github.io/mistri/** in Chrome on any computer, press
+**Start call** and allow the microphone. That's the whole setup.
+
+This version runs entirely in the page: the same engine, ported to
+[static/engine.js](static/engine.js), with caller memory kept in the browser. It
+has no Claude, so it understands lines that use the knowledge base's answer
+words; that covers every line of the demo script below. An off-script phrasing
+gets "Sorry, I didn't catch that." It still needs internet, because Chrome's
+speech recognition runs on Google's servers.
+
+The version below adds Claude for anything phrased differently.
+
+## Set up the full version (once, about 10 minutes)
 
 You need a Mac or Linux laptop with:
 

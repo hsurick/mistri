@@ -236,14 +236,33 @@ function connect(){
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let call=null,rec=null,micBlocked=false,status='';
 function setStatus(t){status=t;$('upnext').textContent=t}
+// No server (GitHub Pages, or ?local): run the engine in this page instead of on /relay
+const LOCAL=location.hostname.endsWith('github.io')||new URLSearchParams(location.search).has('local');
+let engineP,kbP;
+const loadLearner=()=>{try{return JSON.parse(localStorage.getItem('mistri-learner'))}catch(_){return null}};
+const saveLearner=l=>{try{localStorage.setItem('mistri-learner',JSON.stringify(l))}catch(_){}};
+class LocalRelay{ // same interface as the /relay websocket, so the rest of the page doesn't care
+ constructor(){this.readyState=0;this.id='local-'+Date.now();this.t0=Date.now();
+  engineP??=import('./engine.js');kbP??=engineP.then(E=>fetch('../kb/printer.json').then(r=>r.json()).then(E.checkKb));
+  Promise.all([engineP,kbP]).then(([E,kb])=>{this.E=E;this.kb=kb;this.readyState=1;this.onopen?.()}).catch(e=>{setStatus('Could not load the engine: '+e.message);this.close()})}
+ ev(type,kw={}){enqueue({type,call_id:this.id,t:(Date.now()-this.t0)/1000,...kw})}
+ flush(){for(const e of this.c.drain()){const {type,...kw}=e;if(type==='summary'){kw.secs=Math.round((Date.now()-this.t0)/1000);this.L.calls.push(kw);saveLearner(this.L)}this.ev(type,kw)}}
+ send(raw){const m=JSON.parse(raw),c0=performance.now();
+  if(m.type==='setup'){this.L=loadLearner()||this.E.newLearner();this.c=new this.E.Call(this.kb,this.L,this.L.calls.length+1);
+   this.ev('call_start',{call:'Call '+this.c.callNo,source:'browser',returning:this.c.returning});this.ev('history',{calls:this.L.calls});
+   const g=this.c.start();this.flush();this.ev('turn',{speaker:'ai',text:g,phase:this.c.phase});return}
+  if(m.type==='prompt'){this.ev('turn',{speaker:'caller',text:m.voicePrompt});const u=this.E.understand(this.c,m.voicePrompt);
+   const by=u.intent==='other'?'none':'vocabulary';this.ev('understood',{...u,by});const r=this.c.handle(u);this.flush();saveLearner(this.L);
+   this.ev('turn',{speaker:'ai',text:r,phase:this.c.phase,server_ms:Math.round(performance.now()-c0),understood_by:by})}}
+ close(){if(this.readyState===3)return;this.readyState=3;if(this.c)this.ev('call_end');this.onclose?.()}}
 function startCall(){
- call=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/relay');
+ call=LOCAL?new LocalRelay():new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/relay');
  call.onopen=()=>{call.send(JSON.stringify({type:'setup',from:callerId}));setStatus(SR?'':'No speech recognition in this browser: type instead.');drawControls()};
  call.onclose=()=>{endCall()};drawControls()}
 function endCall(){call=null;stopListening();try{synth&&synth.cancel()}catch(_){}setStatus('');drawControls()}
 function hangup(){const c=call;endCall();if(c)c.close()}
 $('next').addEventListener('click',()=>call?hangup():startCall());
-$('restart').addEventListener('click',async()=>{if(call)hangup();await fetch('/forget?caller='+encodeURIComponent(callerId),{method:'POST'});reset();setPhase('Ready','');setStatus('Memory cleared: Mistri will treat you as a new caller.');draw()});
+$('restart').addEventListener('click',async()=>{if(call)hangup();if(LOCAL){try{localStorage.removeItem('mistri-learner')}catch(_){}}else await fetch('/forget?caller='+encodeURIComponent(callerId),{method:'POST'});reset();setPhase('Ready','');setStatus('Memory cleared: Mistri will treat you as a new caller.');draw()});
 function localTurn(){let last=S.turns[S.turns.length-1];if(!(last&&last.k==='user'&&last.local&&!last.sent2)){last={k:'user',text:'',typing:true,local:true,fresh:true};S.turns.push(last)}return last}
 function send(t){if(!t.trim()||!call||call.readyState!==1)return;stopListening();const u=localTurn();u.text=t;u.typing=false;
  call.send(JSON.stringify({type:'prompt',voicePrompt:t,lang:'en-US',last:true}));ensureThink();setPhase('Thinking','ph-think');setStatus('');draw()}
@@ -258,6 +277,6 @@ function listen(){
  rec.start();setPhase('Waiting for caller','live');setStatus('Listening. Just talk.')}
 function stopListening(){if(rec){const r=rec;rec=null;r.onend=null;try{r.abort()}catch(_){}}}
 $('talk').addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details')){const t=S.turns[+d.dataset.i];if(t)t.open=d.open}},true);
-reset();draw();connect();
+reset();draw();if(!LOCAL)connect();
 }
 </script></body></html>
