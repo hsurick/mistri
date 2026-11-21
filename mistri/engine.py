@@ -220,7 +220,7 @@ class Call:
             self.phase = "model"
             return self.say("Sure. What's the name on the front of it?")
         self.think("No device named yet")
-        return self.say("I can help with printers. What are we fixing?")
+        return self.say("Hi there. What do you need help fixing?")
 
     def on_model(self, u):
         self.title("Loading the printer")

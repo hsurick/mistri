@@ -140,7 +140,7 @@ export class Call {
       this.think('Every printer has a different panel, so ask for the model before giving any steps');
       this.phase = 'model'; return this.say("Sure. What's the name on the front of it?");
     }
-    this.think('No device named yet'); return this.say('I can help with printers. What are we fixing?');
+    this.think('No device named yet'); return this.say('Hi there. What do you need help fixing?');
   }
   on_model(u) {
     this.title('Loading the printer');
