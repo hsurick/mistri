@@ -1,0 +1,263 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mistri demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'">
+<style>
+/* VOICE: ops console, calm and exact, with a voice
+IDEA: the supervisor screen watching one live support call, step by step
+PICTURE: the fault graph collapsing from six causes to one while Mistri thinks out loud
+COLOUR and TYPE: the pitch deck's dark slate with lime accent; Inter + JetBrains Mono labels
+LAYOUT: vermilion control band, then call | fault graph | skill graph, then backend stream */
+:root{color-scheme:dark;--bg:#0d0f12;--ink:#f2f4f6;--mut:#8d939c;--line:#2a2f37;--card:#15181d;--card2:#1c2027;--aibg:#c8f04a;--aiink:#0d0f12;--acc:#c8f04a;--accdim:#1d2610;--amb:#e8b339;--grn:#c8f04a;--grey:#3a4049;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;min-width:0}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'Inter',-apple-system,'Segoe UI','PingFang SC',system-ui,sans-serif;overflow-x:clip}
+h1,h2{font-family:'Inter',-apple-system,'Segoe UI',system-ui,sans-serif;line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.02em}
+h1{font-size:clamp(30px,4vw,44px);font-weight:700}h2{font-size:20px;font-weight:700}
+.eyebrow{font:700 13px/1.4 var(--mono);color:var(--acc);letter-spacing:.04em;text-transform:uppercase;margin:0 0 8px}
+.band{padding:clamp(18px,2.6vw,32px) max(4vw,16px)}.wrap{max-width:1320px;margin:0 auto}
+header.band{background:var(--bg);color:var(--ink);border-bottom:1px solid var(--line)}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.top p{margin:8px 0 0;font-size:16px;max-width:60ch;color:var(--mut)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+button{font:inherit;font-weight:600;min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--acc);background:var(--acc);color:#0d0f12;cursor:pointer}
+button.ghost{background:var(--card);color:var(--ink);border-color:var(--line)}button.ghost:hover{border-color:var(--mut)}button:disabled{opacity:.45;cursor:default}
+#next{min-width:12em}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:var(--card);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:15px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;background:#8a807b}
+.chip.live .dot{background:var(--acc);animation:pulse 1s infinite}.chip.ph-think .dot{background:#ffb020;animation:pulse .6s infinite}.chip.talk .dot{background:var(--acc);animation:pulse .5s infinite}
+.chip.warn .dot{background:#ffb020}.chip.ok .dot{background:#3fc27a}
+@keyframes pulse{50%{opacity:.25}}
+.opts{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:15px;margin-top:12px}
+.opts label{display:flex;gap:6px;align-items:center;min-height:32px}
+.opts{color:var(--mut)}.opts input{width:18px;height:18px;accent-color:var(--acc)}
+.opts select{font:inherit;font-size:15px;min-height:36px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 8px;max-width:16em}
+#upnext{font-size:15px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.6fr) minmax(0,.9fr);gap:20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.sub{color:var(--mut);font-size:14px;margin:0}
+#talk{display:flex;flex-direction:column;gap:10px;height:520px;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.msg{padding:10px 12px;border-radius:12px;font-size:15px;line-height:1.45}
+.new{animation:in .3s ease}
+.msg b{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;opacity:.75}
+.user{background:var(--card2);border:1px solid var(--line);margin-right:14%}
+.ai{background:var(--accdim);border:1px solid #3b4d15;color:var(--ink);margin-left:14%}.ai b{color:var(--acc);opacity:1}
+.sys{font-size:13px;color:var(--mut);text-align:center}
+.card{margin:10px 0;padding:14px;border-radius:12px;background:var(--acc);color:#fff;font:800 28px/1.05 'Inter',-apple-system,'Segoe UI',system-ui,sans-serif;text-align:center}.card span{display:block;font:500 14px/1.4 'Inter',system-ui,sans-serif;opacity:.9;margin-top:2px}
+.calls{width:100%;font-size:14px}.calls td,.calls th{padding:5px 6px;white-space:nowrap}
+.caret::after{content:'';display:inline-block;width:2px;height:1em;background:currentColor;margin-left:2px;vertical-align:-2px;animation:pulse .8s infinite}
+.wave{display:inline-flex;gap:2px;align-items:flex-end;height:12px}
+.wave i{width:3px;background:var(--acc);border-radius:2px;animation:wv .9s ease-in-out infinite}
+.wave i:nth-child(2){animation-delay:.15s}.wave i:nth-child(3){animation-delay:.3s}.wave i:nth-child(4){animation-delay:.45s}
+.user .wave i{background:var(--acc)}
+@keyframes wv{0%,100%{height:3px}50%{height:12px}}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.think{margin:0 0 0 2px;font-size:14px;color:var(--mut)}
+.think summary{cursor:pointer;list-style:none;display:inline-flex;gap:6px;align-items:center;font-size:15px;min-height:28px}
+.think summary::-webkit-details-marker{display:none}
+.think{font-size:14px}.think .chev{display:inline-block;transition:transform .2s;font-size:13px}.think[open] .chev{transform:rotate(90deg)}
+.think.active .lbl{background:linear-gradient(90deg,var(--mut) 0%,var(--mut) 35%,var(--ink) 50%,var(--mut) 65%,var(--mut) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 1.3s linear infinite}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
+.think .secs{font-size:13px;opacity:.8}
+.think ol{list-style:none;margin:4px 0 2px 6px;padding:0 0 0 12px;border-left:2px solid var(--line)}
+.think li{padding:2px 0;line-height:1.4}
+.think li.cur{color:var(--ink)}
+.phase{font:700 13px/1.4 var(--mono);color:var(--acc);letter-spacing:.04em;text-transform:uppercase}
+.fg{width:100%;height:auto;display:block}.fg .pop{animation:grow .6s ease}@keyframes grow{from{opacity:0}}
+.fg text{font:13px 'Inter',system-ui,sans-serif;fill:var(--ink)}.fg text.h{fill:var(--mut);font:700 12px var(--mono);letter-spacing:.04em}.fg text.c.h{font:13px 'Inter',system-ui,sans-serif;letter-spacing:0}.fg text.c{text-anchor:middle}
+.fg text.b{font-weight:600}.fg .node{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+.fg .sym{fill:var(--card2);stroke:var(--mut);stroke-width:1.5}.fg text.w{fill:var(--ink)}
+.fg .tp{stroke:var(--acc);stroke-width:2.5}.fg .ok{stroke:var(--grn);stroke-width:2.5}.fg .gone{opacity:.4}
+.fg path{fill:none;stroke:var(--grey);transition:stroke-width .6s}.fg path.hot{stroke:var(--acc)}.fg path.asked{stroke:var(--acc);stroke-width:2.5}
+.fg path.nx{stroke:var(--acc);stroke-width:2;stroke-dasharray:5 4}.fg .tasked{stroke:var(--acc);stroke-width:2}.fg .tnx{stroke:var(--acc);stroke-width:2;stroke-dasharray:5 4}
+.ev{display:flex;flex-wrap:wrap;gap:6px;min-height:30px}
+.ev span{font-size:13px;padding:3px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card2)}
+.next{border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+.next ol{margin:6px 0 0;padding-left:1.3em}.next li{display:flex;justify-content:space-between;gap:10px}.next li.c{font-weight:600;color:var(--acc)}
+.next li span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+svg.sk{width:100%;height:auto;display:block}
+.sk text{font:16px 'Inter',system-ui,sans-serif;fill:var(--ink);text-anchor:middle}.sk text.st{fill:var(--mut);font-size:14px}
+.sk line{stroke:var(--grey);stroke-width:2}.sk circle{stroke-width:3;transition:fill .5s,stroke .5s}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--mut)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.row{display:grid;grid-template-columns:minmax(0,8em) minmax(0,1fr) 4.4em;gap:10px;align-items:center;font-size:14px}
+.track{height:10px;background:var(--line);border-radius:4px;overflow:hidden}.fill{height:100%;transition:width .6s}
+.pct{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lower{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;margin-top:20px}
+pre#log{margin:0;background:#0a0c0f;border:1px solid var(--line);color:#c9ced6;border-radius:10px;padding:14px;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+#log .t{color:var(--acc)}#log .ts{color:#5d636c}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+.rules{font-size:14px;margin:0;padding-left:1.2em}.note{font-size:13px;color:var(--mut)}
+@media(max-width:1000px){.grid,.lower{grid-template-columns:minmax(0,1fr)}#talk{height:400px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<style>
+#typed{font:inherit;font-size:15px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 12px;flex:1 1 220px;max-width:26em}
+#typed:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.latl{font-size:12px;color:var(--mut);margin-top:4px}
+</style>
+<header class="band"><div class="wrap">
+<div class="top"><div><p class="eyebrow">↑ Live call demo</p><h1>Mistri: repair help by phone</h1><p>Press Start call and talk. Mistri listens, thinks out loud, updates its graphs and answers by voice. Call again and it remembers you.</p></div>
+<div class="bar" style="margin:0"><span id="phase" class="chip"><span class="dot"></span><span id="ptext">Ready</span></span></div></div>
+<div class="bar"><button id="next">Start call</button><button id="restart" class="ghost">Forget caller</button><form id="typedform" style="display:contents"><input id="typed" type="text" placeholder="…or type what the caller says" aria-label="Caller line" autocomplete="off"></form><span id="upnext"></span></div>
+<div class="opts"><label><input type="checkbox" id="aivoice" checked> Mistri speaks</label><label>Voice <select id="voice" aria-label="Mistri's voice"></select></label><span id="voicemsg"></span></div>
+</div></header>
+<main class="band"><div class="wrap">
+<div class="grid">
+<section class="panel"><h2>Call</h2><p class="sub">What the caller hears, and what Mistri is thinking between turns.</p><div id="talk" aria-live="polite"></div></section>
+<section class="panel"><h2>Fault graph</h2><div id="fphase" class="phase">Waiting for a call</div>
+<svg id="fg" class="fg" viewBox="0 0 600 360" role="img" aria-label="Fault graph: symptom, causes and tests"></svg>
+<div><p class="sub">Evidence so far</p><div id="evid" class="ev"></div></div>
+<div id="nextq" class="next"></div></section>
+<section class="panel"><h2>Skill graph</h2><p class="sub">Green means the caller did it without help, on a case they hadn't seen.</p>
+<svg id="sk" class="sk" viewBox="0 0 380 230" role="img" aria-label="Skill graph"></svg>
+<div class="legend"><span><i style="background:var(--grey)"></i>Unknown</span><span><i style="background:var(--amb)"></i>Evidence or taught</span><span><i style="background:var(--grn)"></i>Proven</span><span><i style="border:2px dashed var(--mut)"></i>Expert only</span></div>
+<div id="meters"></div><div><p class="sub">Calls</p><table class="calls"><thead><tr><th>Call</th><th>Mistri asked</th><th>Instructions</th><th>Time</th></tr></thead><tbody id="calls"></tbody></table></div></section>
+</div>
+<div class="lower">
+<section class="panel"><h2>Backend event stream</h2><p class="sub">What the server emits; the panels above only draw these.</p><pre id="log"></pre></section>
+</div></div></main>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const callerId=(()=>{try{let v=localStorage.getItem('mistri-caller');if(!v){v='web-'+Math.random().toString(36).slice(2,10);localStorage.setItem('mistri-caller',v)}return v}catch(_){return 'web-anon'}})();
+
+let S;
+function reset(){S={turns:[],evid:[],probs:null,nq:null,stop:null,skills:{},confirmed:false,done:false,log:[],live:false,calls:[],lead:false,device:null,popped:false,G:null,think:null}}
+function newCall(){Object.assign(S,{evid:[],probs:null,nq:null,stop:null,confirmed:false,done:false,lead:false,device:null,popped:false,G:null,think:null,live:true})}
+function setPhase(t,cls){$('ptext').textContent=t;$('phase').className='chip '+(cls||'')}
+
+// ---------- voice (Mistri's) ----------
+const synth='speechSynthesis' in window?window.speechSynthesis:null;let voices=[];
+const PREF=['Google UK English Female','Samantha','Microsoft Aria Online (Natural) - English (United States)','Microsoft Jenny Online (Natural) - English (United States)','Google US English','Karen','Moira','Daniel'];
+function loadVoices(){if(!synth)return;voices=synth.getVoices().filter(v=>/^en/i.test(v.lang));$('voice').parentElement.hidden=!voices.length;if(!voices.length)return;
+ const best=PREF.map(n=>voices.find(v=>v.name===n)).find(Boolean)||voices[0];const cur=$('voice').value;
+ $('voice').innerHTML=voices.map(v=>`<option value="${esc(v.name)}">${esc(v.name.replace(/\s*\(.*\)/,''))} · ${esc(v.lang)}</option>`).join('');
+ $('voice').value=cur&&voices.some(v=>v.name===cur)?cur:best.name}
+if(synth){loadVoices();synth.onvoiceschanged=loadVoices}else{$('voice').disabled=true;$('voicemsg').textContent='This browser has no speech voices.'}
+let utt=null;
+function say(text){
+ if(!synth||!$('aivoice').checked)return sleep(Math.min(Math.max(1200,text.split(/\s+/).length*380),2200));
+ return new Promise(res=>{let done=false;const est=Math.max(1200,text.split(/\s+/).length*380);
+  const u=utt=new SpeechSynthesisUtterance(text);const fin=()=>{if(!done&&u===utt){done=true;clearTimeout(t);res()}};
+  const v=voices.find(x=>x.name===$('voice').value);if(v){u.voice=v;u.lang=v.lang}u.rate=1.02;
+  u.onend=fin;u.onerror=e=>{if(e.error==='not-allowed')$('voicemsg').textContent='Voice blocked here; try opening the page in its own tab.';fin()};
+  const t=setTimeout(fin,est+4000);synth.cancel();synth.speak(u)})}
+
+// ---------- drawing ----------
+const cy=i=>52+i*56,SY=192;
+function drawFG(){
+ const svg=$('fg');
+ if(!S.evid.length||!S.G){const [a,b]=S.device?['Waiting for a symptom','The printer graph is loaded, but no part of it applies yet.']:['No device yet','Mistri loads a fault graph once the caller says what is broken.'];svg.innerHTML=`<rect x="1" y="1" width="598" height="358" rx="12" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6 6"/><text class="c b" x="300" y="170">${a}</text><text class="c h" x="300" y="194">${b}</text>`;return}
+ const F=S.G.faults,TS=S.G.tests,tid=new Set(TS.map(t=>t.id));
+ const p=F.map(f=>S.probs?S.probs[f.id]:f.prior),m=Math.max(...p),top=p.indexOf(m);
+ const asked=Object.fromEntries(S.evid.filter(e=>tid.has(e.test)).map(e=>[e.test,e.label])),nx=S.stop?'':S.nq?.chosen;
+ const sym=S.evid.find(e=>!tid.has(e.test));
+ let h='<text class="h" x="10" y="16">Symptom</text><text class="h" x="190" y="16">Causes, by odds</text><text class="h" x="450" y="16">Tests</text>';
+ F.forEach((f,i)=>{h+=`<path class="${i===top?'hot':''}" d="M130 ${SY} C160 ${SY} 160 ${cy(i)} 190 ${cy(i)}" style="stroke-width:${(1+10*p[i]).toFixed(1)}"/>`});
+ TS.forEach((t,j)=>t.links.forEach(l=>{const i=F.findIndex(f=>f.id===l);if(i<0)return;h+=`<path class="${asked[t.id]?'asked':t.id===nx?'nx':''}" d="M450 ${cy(j)} C415 ${cy(j)} 415 ${cy(i)} 380 ${cy(i)}" style="stroke-width:${asked[t.id]?2.5:1.5}"/>`}));
+ h+=`<rect class="sym" x="10" y="${SY-30}" width="120" height="60" rx="10"/><text class="w b" x="22" y="${SY-6}">${esc(S.G.symptom_title||'Symptom')}</text><text class="w" x="22" y="${SY+14}">${esc((sym?.label||'').toLowerCase())}</text>`;
+ F.forEach((f,i)=>{const y=cy(i),ok=S.confirmed&&f.id===S.stop?.fault,cls=ok?'ok':i===top?'tp':'';
+  h+=`<g class="${p[i]<.03?'gone':''}"><rect class="node ${cls}" x="190" y="${y-19}" width="190" height="38" rx="8"/><rect x="191" y="${y-18}" width="${(188*p[i]).toFixed(1)}" height="36" rx="7" fill="${ok?'var(--grn)':'var(--acc)'}" opacity="${i===top||ok?.28:.14}"/><text class="${i===top?'b':''}" x="200" y="${y+5}">${esc(f.name)}</text>${ok?`<path d="M356 ${y} l5 5 l10 -11" style="stroke:var(--grn);stroke-width:3;fill:none"/>`:`<text class="b" x="372" y="${y+5}" text-anchor="end">${Math.round(p[i]*100)}%</text>`}</g>`});
+ TS.forEach((t,j)=>{const y=cy(j),a=asked[t.id];h+=`<rect class="node ${a?'tasked':t.id===nx?'tnx':''}" x="450" y="${y-17}" width="140" height="34" rx="17"/><text class="${a?'b':''}" x="464" y="${y+5}">${esc(t.label)}${a?' '+esc(a):''}</text>`});
+ svg.innerHTML=`<g${S.popped?'':' class="pop"'}>${h}</g>`;S.popped=true}
+function drawSkills(){
+ if(!S.device||!S.G){$('sk').innerHTML=`<rect x="1" y="1" width="378" height="228" rx="12" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6 6"/><text x="190" y="110" style="font-weight:600">No skills loaded</text><text class="st" x="190" y="134">They appear with the device's graph.</text>`;$('meters').innerHTML='';return}
+ const SK=S.G.skills,SE=S.G.skill_edges,st=S.skills,pos=Object.fromEntries(SK.map(s=>[s.id,s]));
+ const col=s=>s.expert?['none','var(--mut)']:!st[s.id]?['var(--grey)','var(--grey)']:st[s.id].proven?['var(--grn)','var(--grn)']:['var(--amb)','var(--amb)'];
+ const lab=s=>s.expert?'expert only':!st[s.id]?'unknown':st[s.id].proven?'proven':st[s.id].p>=.5?'evidence':'taught';
+ $('sk').innerHTML=SE.map(([a,b])=>`<line x1="${pos[a].x}" y1="${pos[a].y}" x2="${pos[b].x}" y2="${pos[b].y}"/>`).join('')+SK.map(s=>{const [f,c]=col(s);return `<circle cx="${s.x}" cy="${s.y}" r="17" fill="${f}" stroke="${c}"${s.expert?' stroke-dasharray="5 4"':''}/><text x="${s.x}" y="${s.y+36}">${esc(s.name)}</text><text class="st" x="${s.x}" y="${s.y+55}">${lab(s)}</text>`}).join('');
+ $('meters').innerHTML=SK.filter(s=>!s.expert).map(s=>{const e=st[s.id],v=e?e.p:0;return `<div class="row"><span>${esc(s.name)}</span><div class="track"><div class="fill" style="width:${v*100}%;background:${e?e.proven?'var(--grn)':'var(--amb)':'var(--grey)'}"></div></div><span class="pct">p ${v.toFixed(2)}</span></div>`}).join('')}
+const WAVE='<span class="wave"><i></i><i></i><i></i><i></i></span>';
+function drawTalk(){
+ const tk=$('talk');
+ if(!S.turns.length){tk.innerHTML='<div class="msg sys">Press Start call, then talk.</div>';return}
+ tk.innerHTML=S.turns.map((t,i)=>{const n=t.fresh?' new':'';
+  if(t.k==='sys')return `<div class="msg sys${n}">${esc(t.text)}</div>`;
+  if(t.k==='user')return `<div class="msg user${n}"><b>Caller${t.typing?WAVE:''}</b><span class="${t.typing?'caret':''}">${esc(t.text)}</span></div>`;
+  if(t.k==='ai')return `<div class="msg ai${n}"><b>Mistri${t.speaking?WAVE:''}</b>${esc(t.text)}${t.by?`<div class="latl">${t.by==='claude'?'understood by Claude':t.by==='vocabulary'?'understood instantly':'not understood'} · ${t.ms} ms</div>`:''}</div>`;
+  return `<details class="think${t.active?' active':''}${n}" data-i="${i}"${t.open?' open':''}><summary><span class="lbl">${esc(t.title)}</span>${t.secs?`<span class="secs">· ${t.secs}s</span>`:''}<span class="chev">›</span></summary><ol>${t.lines.map((l,j)=>`<li class="${t.active&&j===t.lines.length-1?'cur new':''}">${esc(l)}</li>`).join('')}</ol></details>`}).join('');
+ S.turns.forEach(t=>t.fresh=false);tk.scrollTop=tk.scrollHeight}
+function drawSide(){
+ const TS=S.G?.tests||[],F=S.G?.faults||[];
+ $('evid').innerHTML=S.evid.length?S.evid.map(e=>{const t=TS.find(t=>t.id===e.test);return `<span>${esc(t?t.label+' '+e.label:e.label)}</span>`}).join(''):'<span>None yet</span>';
+ const fname=id=>F.find(f=>f.id===id)?.name||id;
+ $('nextq').innerHTML=S.stop?`<strong>Stopped asking.</strong> ${esc(fname(S.stop.fault))} at ${Math.round(S.stop.p*100)}%, past the ${Math.round(S.stop.threshold*100)}% threshold, so ${S.lead?'the caller does the fix on their own.':'Mistri moves to the fix.'}`:S.lead?'<strong>No question from the graph.</strong> Help is fading: Mistri asks the caller what they think first.':S.nq?`<strong>Next question, by information gain</strong><ol>${S.nq.candidates.map(c=>`<li class="${c.test===S.nq.chosen?'c':''}"><span>${esc(c.ask)}</span><span>${c.gain_bits.toFixed(2)} bits</span></li>`).join('')}</ol>`:'<strong>Next question</strong><p class="sub">Waiting for the first symptom.</p>';
+ $('fphase').textContent=!S.device&&S.live?'Listening for the problem':S.done?(S.lead?'Done: caller fixed it alone':'Done: fixed with guidance'):S.confirmed?'Fixed':S.stop?(S.lead?'Caller is fixing it alone':'Guiding the fix'):S.evid.length?'Diagnosing':S.live?'Listening':'Waiting for a call'}
+function drawCalls(){$('calls').innerHTML=S.calls.length?S.calls.map(c=>`<tr><td>${esc(c.call)}</td><td>${c.questions}</td><td>${c.instructions}</td><td>${c.secs} s</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:left;color:var(--mut)">No calls yet</td></tr>'}
+function drawLog(){const lg=$('log');lg.innerHTML=S.log.length?S.log.map(l=>`<span class="ts">#${l.step}</span> `+esc(JSON.stringify(l.o)).replace(/(&quot;type&quot;:&quot;[a-z_]+&quot;)/,'<span class="t">$1</span>').replace(/&quot;/g,'"')).join('\n'):'No events yet.';lg.scrollTop=lg.scrollHeight}
+function drawControls(){$('next').textContent=call?'Hang up':'Start call';$('upnext').textContent=status}
+function draw(){drawTalk();drawFG();drawSkills();drawSide();drawLog();drawCalls();drawControls()}
+
+// ---------- live events: queued so Mistri's thinking plays out line by line ----------
+const Q=[];let pumping=false;
+function enqueue(e){Q.push(e);if(!pumping)pump()}
+async function pump(){pumping=true;while(Q.length){const e=Q.shift();if(e.type==='thought'&&!e.replay)await sleep(450);handle(e)}pumping=false}
+function ensureThink(title){if(!S.think||!S.think.active){S.think={k:'think',title:title||'Thinking',lines:[],active:true,open:true,fresh:true,t0:performance.now()};S.turns.push(S.think)}return S.think}
+function closeThink(){const t=S.think;if(t&&t.active){t.active=false;t.open=false;t.secs=((performance.now()-t.t0)/1000).toFixed(1)}}
+const QUIET=new Set(['thought','think_title','thinking','turn']);
+function handle(e){
+ if(!QUIET.has(e.type)){const {call_id,t,replay,...o}=e;S.log.push({step:S.turns.filter(x=>x.k!=='think').length,o})}
+ switch(e.type){
+  case 'call_start':newCall();S.turns.push({k:'sys',text:'Call started',fresh:true});setPhase('Connecting','live');break;
+  case 'history':S.calls=e.calls||[];break;
+  case 'think_title':ensureThink(e.title).title=e.title;break;
+  case 'thought':ensureThink().lines.push(e.text);setPhase('Thinking','ph-think');break;
+  case 'thinking':ensureThink();setPhase('Thinking','ph-think');break;
+  case 'device':S.device=e.device;break;
+  case 'graph':S.G=e;break;
+  case 'learner':S.lead=e.support==='let them lead';break;
+  case 'evidence':S.evid.push(e);break;
+  case 'faults':S.probs=e.probs;break;
+  case 'next_question':S.nq=e;S.stop=null;break;
+  case 'stop':S.stop=e;break;
+  case 'skill':S.skills[e.skill]={p:e.p,proven:e.proven};break;
+  case 'repair_confirmed':S.confirmed=true;break;
+  case 'summary':S.done=true;S.calls=[...S.calls.filter(c=>c.call!==e.call),{call:e.call,questions:e.questions,instructions:e.instructions,secs:e.secs}];break;
+  case 'handoff':S.turns.push({k:'sys',text:'Handed off to a technician',fresh:true});break;
+  case 'call_end':closeThink();S.live=false;S.turns.push({k:'sys',text:'Call ended',fresh:true});setPhase('Call ended','');if(call)endCall();break;
+  case 'turn':
+   if(e.speaker==='caller'){const mine=[...S.turns].reverse().find(x=>x.k==='user'&&x.local&&!x.sent2); // this tab already shows it
+    if(!mine||e.replay){S.turns.push({k:'user',text:e.text,fresh:true})}else{mine.text=e.text;mine.typing=false;mine.sent2=true}
+    ensureThink();setPhase('Thinking','ph-think')}
+   else{closeThink();const a={k:'ai',text:e.text,fresh:true,by:e.understood_by,ms:e.server_ms};S.turns.push(a);
+    if(call&&!e.replay){a.speaking=true;setPhase('Speaking','talk');status='';say(e.text).then(()=>{a.speaking=false;draw();if(S.done||e.phase==='handoff'){setTimeout(()=>{if(call)hangup()},800)}else listen()})}
+    else setPhase(S.live?'Waiting for caller':'Call ended',S.live?'live':'')}
+   break}
+ draw()}
+function connect(){
+ const ws=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/events');
+ ws.onmessage=m=>enqueue(JSON.parse(m.data));ws.onclose=()=>setTimeout(connect,1000)}
+
+// ---------- the caller: this tab dials /relay like Twilio would, with the browser's speech recognition ----------
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let call=null,rec=null,micBlocked=false,status='';
+function setStatus(t){status=t;$('upnext').textContent=t}
+function startCall(){
+ call=new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/relay');
+ call.onopen=()=>{call.send(JSON.stringify({type:'setup',from:callerId}));setStatus(SR?'':'No speech recognition in this browser: type instead.');drawControls()};
+ call.onclose=()=>{endCall()};drawControls()}
+function endCall(){call=null;stopListening();try{synth&&synth.cancel()}catch(_){}setStatus('');drawControls()}
+function hangup(){const c=call;endCall();if(c)c.close()}
+$('next').addEventListener('click',()=>call?hangup():startCall());
+$('restart').addEventListener('click',async()=>{if(call)hangup();await fetch('/forget?caller='+encodeURIComponent(callerId),{method:'POST'});reset();setPhase('Ready','');setStatus('Memory cleared: Mistri will treat you as a new caller.');draw()});
+function localTurn(){let last=S.turns[S.turns.length-1];if(!(last&&last.k==='user'&&last.local&&!last.sent2)){last={k:'user',text:'',typing:true,local:true,fresh:true};S.turns.push(last)}return last}
+function send(t){if(!t.trim()||!call||call.readyState!==1)return;stopListening();const u=localTurn();u.text=t;u.typing=false;
+ call.send(JSON.stringify({type:'prompt',voicePrompt:t,lang:'en-US',last:true}));ensureThink();setPhase('Thinking','ph-think');setStatus('');draw()}
+$('typedform').addEventListener('submit',e=>{e.preventDefault();send($('typed').value);$('typed').value=''});
+function listen(){
+ if(!SR||!call||micBlocked)return;
+ stopListening();rec=new SR();rec.lang='en-US';rec.interimResults=true;let sent=false;
+ rec.onresult=ev=>{const x=ev.results[ev.results.length-1],u=localTurn();u.text=x[0].transcript;setPhase('Transcribing','live');
+  if(x.isFinal){sent=true;send(x[0].transcript)}else drawTalk()};
+ rec.onerror=ev=>{if(['not-allowed','service-not-allowed','audio-capture'].includes(ev.error)){micBlocked=true;setStatus('Microphone unavailable: allow it in the address bar and reload, or type.')}};
+ rec.onend=()=>{rec=null;if(!sent&&call)listen()}; // silence timed out: keep listening
+ rec.start();setPhase('Waiting for caller','live');setStatus('Listening. Just talk.')}
+function stopListening(){if(rec){const r=rec;rec=null;r.onend=null;try{r.abort()}catch(_){}}}
+$('talk').addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details')){const t=S.turns[+d.dataset.i];if(t)t.open=d.open}},true);
+reset();draw();connect();
+}
+</script></body></html>

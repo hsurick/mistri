@@ -1,0 +1,552 @@
+{
+ "title": "Canon PIXMA G3010",
+ "device": "Canon PIXMA G3010",
+ "graph_id": "canon_pixma_g3010",
+ "device_kind": {
+  "name": "printer",
+  "keywords": [
+   "printer",
+   "printing",
+   "print"
+  ]
+ },
+ "model_keywords": [
+  "g3010",
+  "g 3010",
+  "g three thousand ten",
+  "pixma",
+  "canon"
+ ],
+ "greeting": "Hi, this is Mistri. What are we fixing today?",
+ "greeting_returning": "Hi again. What's the printer doing?",
+ "symptom_title": "Won't print",
+ "fallback": "Sorry, I didn't catch that.",
+ "handoff": "I can't pin this down over the phone. Let's get a technician to look at it.",
+ "after_end": "We're done here. You can hang up whenever you like.",
+ "hints": "Canon, PIXMA, G3010, A4, LTR, letter, 4 by 6, four by six, photo paper, orange light, warning light, page icon, OK button, Wi-Fi",
+ "threshold": 0.85,
+ "faults": [
+  {
+   "id": "size_mismatch",
+   "name": "Paper size mismatch",
+   "prior": 0.1,
+   "teach": "paper_size",
+   "explain": "The printer's set for {size_desc}, but there's {paper_desc} in it, so it stopped.",
+   "steps": [
+    {
+     "say": "Press the button with the page picture until {paper} lights up, then press OK.",
+     "help": "It's the top button next to the size lights, with a little page on it. OK is the one under it."
+    }
+   ],
+   "rule": "orange light, check the size light matches your paper."
+  },
+  {
+   "id": "out_of_paper",
+   "name": "Out of paper",
+   "prior": 0.25,
+   "teach": "loading_paper",
+   "explain": "The tray's empty.",
+   "steps": [
+    {
+     "say": "Put a small stack of A4 in the back tray, print side up, slide the guide against it, then press OK.",
+     "help": "The tray is at the back, under the flap on top. Lift the flap and the slot is right there."
+    }
+   ],
+   "rule": "orange light, check there's paper in the back tray."
+  },
+  {
+   "id": "paper_jam",
+   "name": "Paper jam",
+   "prior": 0.2,
+   "teach": "clear_jams",
+   "explain": "There's a sheet stuck inside.",
+   "steps": [
+    {
+     "say": "Hold the stuck sheet with both hands and pull it out slowly, straight towards you.",
+     "help": "Both hands on the sheet, and pull slowly so it doesn't tear."
+    },
+    {
+     "say": "Now close the cover and press OK.",
+     "help": "OK is the round button next to the lights."
+    }
+   ],
+   "rule": "orange light, open the front cover and look for a stuck sheet. Pull it out slowly."
+  },
+  {
+   "id": "ink_empty",
+   "name": "Ink empty",
+   "prior": 0.15,
+   "teach": "ink_refill",
+   "explain": "One of the inks has run out.",
+   "steps": [
+    {
+     "say": "Open the ink cover and top up the tank under the blinking light, then close it.",
+     "help": "The ink cover is the front panel. The tank to fill sits under the light that's blinking."
+    }
+   ],
+   "rule": "blinking ink light, top up the tank under it."
+  },
+  {
+   "id": "cover_open",
+   "name": "Cover open",
+   "prior": 0.1,
+   "teach": "panel_lights",
+   "explain": "The top cover isn't fully closed.",
+   "steps": [
+    {
+     "say": "Push the top cover down firmly until it clicks.",
+     "help": "The top cover is the lid over the paper output. Press the middle of it."
+    }
+   ],
+   "rule": "orange light, push the top cover down until it clicks."
+  },
+  {
+   "id": "not_connected",
+   "name": "Not connected",
+   "prior": 0.2,
+   "teach": "panel_lights",
+   "explain": "The printer isn't on the Wi-Fi, so the job never reaches it.",
+   "steps": [
+    {
+     "say": "Hold the Wi-Fi button for three seconds, until the blue light blinks.",
+     "help": "The Wi-Fi button has the little wave symbol, next to the power button."
+    },
+    {
+     "say": "Now press the WPS button on your router.",
+     "help": "It's usually a small button on the back of the router marked WPS."
+    }
+   ],
+   "rule": "Wi-Fi light off, reconnect it with the Wi-Fi button and WPS."
+  }
+ ],
+ "tests": [
+  {
+   "id": "warning_light",
+   "label": "Warning light?",
+   "symptom": true,
+   "volunteer": true,
+   "ask": "Is there a warning light on? What colour is it?",
+   "answers": [
+    {
+     "id": "orange",
+     "label": "Orange light",
+     "keywords": [
+      "orange",
+      "amber",
+      "yellow",
+      "warning light",
+      "red light",
+      "error light"
+     ],
+     "note": "Orange light is likely under 5 of 6 causes; Wi-Fi trouble shows a different light"
+    },
+    {
+     "id": "none",
+     "label": "No warning light",
+     "keywords": [
+      "no light",
+      "no lights",
+      "no warning",
+      "nothing lit"
+     ]
+    }
+   ],
+   "p": {
+    "size_mismatch": {
+     "orange": 0.9,
+     "none": 0.1
+    },
+    "out_of_paper": {
+     "orange": 0.9,
+     "none": 0.1
+    },
+    "paper_jam": {
+     "orange": 0.9,
+     "none": 0.1
+    },
+    "ink_empty": {
+     "orange": 0.7,
+     "none": 0.3
+    },
+    "cover_open": {
+     "orange": 0.8,
+     "none": 0.2
+    },
+    "not_connected": {
+     "orange": 0.2,
+     "none": 0.8
+    }
+   }
+  },
+  {
+   "id": "size_light",
+   "label": "Size light?",
+   "skill": "panel_lights",
+   "effort": 1,
+   "why_first": "On the G3010 the size lights sit next to the warning light, one glance away: ask that first",
+   "ask": "Look next to that orange light. There's a little column: A4, LTR, 4 by 6. Which one's lit?",
+   "answers": [
+    {
+     "id": "a4",
+     "label": "A4",
+     "keywords": [
+      "a4",
+      "a 4",
+      "a four",
+      "top",
+      "first",
+      "top one"
+     ],
+     "desc": "A4"
+    },
+    {
+     "id": "ltr",
+     "label": "LTR",
+     "keywords": [
+      "ltr",
+      "letter",
+      "l t r",
+      "middle",
+      "second",
+      "middle one"
+     ],
+     "desc": "Letter paper",
+     "note": "Most people leave it on A4, so LTR points at a size mismatch"
+    },
+    {
+     "id": "4x6",
+     "label": "4×6",
+     "keywords": [
+      "4 by 6",
+      "four by six",
+      "4x6",
+      "4 x 6",
+      "for by six",
+      "four by 6",
+      "bottom",
+      "last",
+      "bottom one",
+      "third"
+     ],
+     "desc": "small photo paper",
+     "ack": "That's 4 by 6, the small photo size.",
+     "note": "Most people leave it on A4, so 4 by 6 points at a size mismatch"
+    }
+   ],
+   "p": {
+    "size_mismatch": {
+     "a4": 0.1,
+     "ltr": 0.45,
+     "4x6": 0.45
+    },
+    "*": {
+     "a4": 0.9,
+     "ltr": 0.05,
+     "4x6": 0.05
+    }
+   }
+  },
+  {
+   "id": "paper",
+   "label": "Paper type?",
+   "requires": "size_light",
+   "effort": 1,
+   "ask": "What paper did you put in: normal sheets, or small photo paper?",
+   "answers": [
+    {
+     "id": "a4",
+     "label": "A4",
+     "keywords": [
+      "a4",
+      "a 4",
+      "a four",
+      "normal",
+      "regular",
+      "plain"
+     ],
+     "desc": "normal A4",
+     "paper": "A4"
+    },
+    {
+     "id": "photo",
+     "label": "Photo",
+     "keywords": [
+      "photo",
+      "small",
+      "glossy"
+     ],
+     "desc": "small photo paper",
+     "paper": "4 by 6"
+    },
+    {
+     "id": "empty",
+     "label": "Empty",
+     "keywords": [
+      "empty",
+      "no paper",
+      "nothing in",
+      "none"
+     ],
+     "desc": "no paper"
+    }
+   ],
+   "compare": {
+    "test": "size_light",
+    "same": {
+     "a4": [
+      "a4"
+     ],
+     "photo": [
+      "4x6"
+     ]
+    },
+    "passthrough": [
+     "empty"
+    ]
+   },
+   "outcomes": [
+    "match",
+    "mismatch",
+    "empty"
+   ],
+   "p": {
+    "size_mismatch": {
+     "match": 0.04,
+     "mismatch": 0.95,
+     "empty": 0.01
+    },
+    "out_of_paper": {
+     "match": 0.05,
+     "mismatch": 0.05,
+     "empty": 0.9
+    },
+    "*": {
+     "match": 0.9,
+     "mismatch": 0.05,
+     "empty": 0.05
+    }
+   }
+  },
+  {
+   "id": "paper_stuck",
+   "label": "Paper stuck?",
+   "skill": "clear_jams",
+   "effort": 2,
+   "ask": "Open the front cover. Can you see any paper stuck inside?",
+   "answers": [
+    {
+     "id": "yes",
+     "label": "Yes",
+     "keywords": [
+      "yes",
+      "yeah",
+      "yep",
+      "there is",
+      "i can see",
+      "stuck",
+      "jammed",
+      "crumpled"
+     ]
+    },
+    {
+     "id": "no",
+     "label": "No",
+     "keywords": [
+      "no",
+      "nope",
+      "nothing",
+      "clear",
+      "empty inside"
+     ]
+    }
+   ],
+   "p": {
+    "paper_jam": {
+     "yes": 0.95,
+     "no": 0.05
+    },
+    "*": {
+     "yes": 0.02,
+     "no": 0.98
+    }
+   }
+  },
+  {
+   "id": "ink_light",
+   "label": "Ink level?",
+   "skill": "ink_refill",
+   "effort": 1,
+   "ask": "Is the ink light, the one with the drop symbol, on or blinking?",
+   "answers": [
+    {
+     "id": "on",
+     "label": "Low",
+     "keywords": [
+      "yes",
+      "on",
+      "blinking",
+      "flashing",
+      "lit"
+     ]
+    },
+    {
+     "id": "off",
+     "label": "OK",
+     "keywords": [
+      "no",
+      "off",
+      "not on",
+      "dark"
+     ]
+    }
+   ],
+   "p": {
+    "ink_empty": {
+     "on": 0.9,
+     "off": 0.1
+    },
+    "*": {
+     "on": 0.1,
+     "off": 0.9
+    }
+   }
+  },
+  {
+   "id": "cover",
+   "label": "Cover closed?",
+   "effort": 1,
+   "ask": "Is the top cover fully closed?",
+   "answers": [
+    {
+     "id": "open",
+     "label": "No",
+     "keywords": [
+      "open",
+      "not closed",
+      "up",
+      "no"
+     ]
+    },
+    {
+     "id": "closed",
+     "label": "Yes",
+     "keywords": [
+      "closed",
+      "shut",
+      "yes",
+      "down"
+     ]
+    }
+   ],
+   "p": {
+    "cover_open": {
+     "open": 0.9,
+     "closed": 0.1
+    },
+    "*": {
+     "open": 0.05,
+     "closed": 0.95
+    }
+   }
+  },
+  {
+   "id": "wifi_light",
+   "label": "Wi-Fi light?",
+   "effort": 1,
+   "ask": "Is the blue Wi-Fi light on?",
+   "answers": [
+    {
+     "id": "on",
+     "label": "On",
+     "keywords": [
+      "yes",
+      "on",
+      "blue",
+      "lit"
+     ]
+    },
+    {
+     "id": "off",
+     "label": "Off",
+     "keywords": [
+      "no",
+      "off",
+      "not on",
+      "dark"
+     ]
+    }
+   ],
+   "p": {
+    "not_connected": {
+     "on": 0.15,
+     "off": 0.85
+    },
+    "*": {
+     "on": 0.9,
+     "off": 0.1
+    }
+   }
+  }
+ ],
+ "skills": [
+  {
+   "id": "panel_lights",
+   "name": "Panel lights",
+   "x": 62,
+   "y": 45
+  },
+  {
+   "id": "paper_size",
+   "name": "Paper size",
+   "x": 190,
+   "y": 45
+  },
+  {
+   "id": "ink_refill",
+   "name": "Refill ink",
+   "x": 318,
+   "y": 45
+  },
+  {
+   "id": "loading_paper",
+   "name": "Load paper",
+   "x": 62,
+   "y": 155
+  },
+  {
+   "id": "clear_jams",
+   "name": "Clear jams",
+   "x": 190,
+   "y": 155
+  },
+  {
+   "id": "power_unit",
+   "name": "Power unit",
+   "x": 318,
+   "y": 155,
+   "expert": true
+  }
+ ],
+ "skill_edges": [
+  [
+   "panel_lights",
+   "paper_size"
+  ],
+  [
+   "loading_paper",
+   "paper_size"
+  ],
+  [
+   "loading_paper",
+   "clear_jams"
+  ],
+  [
+   "panel_lights",
+   "ink_refill"
+  ],
+  [
+   "clear_jams",
+   "power_unit"
+  ]
+ ]
+}
